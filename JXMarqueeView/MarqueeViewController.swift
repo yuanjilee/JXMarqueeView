@@ -19,21 +19,26 @@ class MarqueeViewController: UIViewController {
 
         let label = UILabel()
         label.textColor = UIColor.red
-        label.font = UIFont.systemFont(ofSize: 30, weight: .medium)
-        label.text = "abcdefghijklmnopqrstuvwxyz"
+        label.font = UIFont.systemFont(ofSize: 100, weight: .medium)
+        label.text = "abc"//defghijklmnopqrstuvwxyz"
 
         marqueeView.contentView = label
         marqueeView.backgroundColor = UIColor.lightGray
         marqueeView.contentMargin = 50
+        marqueeView.pointsPerFrame = 3
         marqueeView.marqueeType = marqueeType!
+        marqueeView.transform = CGAffineTransform(rotationAngle: CGFloat.pi / 2)
+
+        marqueeView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
         self.view.addSubview(marqueeView)
+
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
 
-        marqueeView.bounds = CGRect(x:0, y:0, width: 200, height: 60)
-        marqueeView.center = self.view.center
+//      marqueeView.bounds = CGRect(x:0, y:0, width: view.frame.width, height: view.frame.height)
+//        marqueeView.center = self.view.center
     }
 
     override func didReceiveMemoryWarning() {

@@ -36,7 +36,7 @@ public enum JXMarqueeType {
 public class JXMarqueeView: UIView {
     public var marqueeType: JXMarqueeType = .left
     public var contentMargin: CGFloat = 12                     //两个视图之间的间隔
-    public var frameInterval: Int = 1                          //多少帧回调一次，一帧时间1/60秒
+    public var frameInterval: Int = 0                          //多少帧回调一次，默认为0
     public var pointsPerFrame: CGFloat = 0.5                   //每次回调移动多少点
     public var contentView: UIView? {
         didSet {
@@ -47,6 +47,7 @@ public class JXMarqueeView: UIView {
     private let containerView = UIView()
     private var marqueeDisplayLink: CADisplayLink?
     private var isReversing = false
+    private var isShortText = false
 
     override open func willMove(toSuperview newSuperview: UIView?) {
         //当视图将被移除父视图的时候，newSuperview就为nil。在这个时候，停止掉CADisplayLink，断开循环引用，视图就可以被正确释放掉了。
@@ -93,10 +94,16 @@ public class JXMarqueeView: UIView {
         validContentView.sizeToFit()
         containerView.addSubview(validContentView)
 
+        isShortText = validContentView.bounds.width < self.bounds.width
+
         if marqueeType == .reverse {
             containerView.frame = CGRect(x: 0, y: 0, width: validContentView.bounds.size.width, height: self.bounds.size.height)
         }else {
+          if isShortText {
+            containerView.frame = CGRect(x: -self.bounds.width, y: 0, width: self.bounds.width, height: self.bounds.size.height)
+          } else {
             containerView.frame = CGRect(x: 0, y: 0, width: validContentView.bounds.size.width*2 + contentMargin, height: self.bounds.size.height)
+          }
         }
 
         if validContentView.bounds.size.width > self.bounds.size.width {
@@ -116,6 +123,10 @@ public class JXMarqueeView: UIView {
             }else {
                 validContentView.frame = CGRect(x: 0, y: 0, width: validContentView.bounds.size.width, height: self.bounds.size.height)
             }
+
+          if self.bounds.size.width != 0 {
+              self.startMarquee()
+          }
         }
     }
 
@@ -134,7 +145,7 @@ public class JXMarqueeView: UIView {
         }
 
         self.marqueeDisplayLink = CADisplayLink.init(target: self, selector: #selector(processMarquee))
-        self.marqueeDisplayLink?.frameInterval = self.frameInterval
+        self.marqueeDisplayLink?.preferredFramesPerSecond = self.frameInterval
         self.marqueeDisplayLink?.add(to: RunLoop.main, forMode: RunLoop.Mode.common)
     }
 
@@ -148,9 +159,17 @@ public class JXMarqueeView: UIView {
 
         switch marqueeType {
         case .left:
-            let targetX = -(self.contentView!.bounds.size.width + self.contentMargin)
+            var targetX = -(self.contentView!.bounds.size.width + self.contentMargin)
+
+            if isShortText {
+              targetX = -(self.contentView!.bounds.size.width)
+            }
+
             if frame.origin.x <= targetX {
-                frame.origin.x = 0
+              frame.origin.x = 0
+              if isShortText {
+                frame.origin.x = frame.width
+              }
                 self.containerView.frame = frame
             }else {
                 frame.origin.x -= pointsPerFrame
